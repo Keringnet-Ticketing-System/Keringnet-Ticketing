@@ -145,63 +145,83 @@
         </div>
 
         <!-- DISPATCHER DASHBOARD -->
-        <div id="panel-dispatch" class="dashboard-panel hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Create Ticket Form -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-1">
-                <h3 class="text-lg font-bold mb-4 text-white">Create Client &amp; Ticket</h3>
-                <form onsubmit="handleCreateTicket(event)" class="space-y-3">
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Account Number</label>
-                        <input type="text" id="t-account" value="KB0001" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Client Full Name</label>
-                        <input type="text" id="t-name" placeholder="e.g. John Kamau" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Phone Number</label>
-                        <input type="text" id="t-phone" placeholder="0712345678" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
+        <div id="panel-dispatch" class="dashboard-panel hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Create Ticket Form -->
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-1">
+                    <h3 class="text-lg font-bold mb-4 text-white">Create Client &amp; Ticket</h3>
+                    <form onsubmit="handleCreateTicket(event)" class="space-y-3">
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">Plot Name</label>
-                            <input type="text" id="t-plot" placeholder="Kwa Maji Hse" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                            <label class="text-xs text-slate-400 font-semibold">Account Number</label>
+                            <input type="text" id="t-account" value="KB0001" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">House No.</label>
-                            <input type="text" id="t-house" placeholder="B4" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                            <label class="text-xs text-slate-400 font-semibold">Client Full Name</label>
+                            <input type="text" id="t-name" placeholder="e.g. John Kamau" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                         </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Phone Number</label>
+                            <input type="text" id="t-phone" placeholder="0712345678" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-slate-400 font-semibold">Plot Name</label>
+                                <input type="text" id="t-plot" placeholder="Kwa Maji Hse" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 font-semibold">House No.</label>
+                                <input type="text" id="t-house" placeholder="B4" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Package Type</label>
+                            <select id="t-package" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                                <option value="10 Mbps (KES 1,000)">10 Mbps (KES 1,000)</option>
+                                <option value="16 Mbps (KES 1,500)">16 Mbps (KES 1,500)</option>
+                                <option value="20 Mbps (KES 2,000)">20 Mbps (KES 2,000)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Ticket Type &amp; Issue</label>
+                            <select id="t-type" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 mb-2 text-white">
+                                <option value="Installation">New Installation</option>
+                                <option value="Support Fault">Support Fault</option>
+                                <option value="Maintenance">Maintenance</option>
+                            </select>
+                            <textarea id="t-desc" placeholder="Describe issue / installation requirements..." required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white h-20"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Assign Technician</label>
+                            <select id="t-tech" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition">Dispatch Ticket</button>
+                    </form>
+                </div>
+                <!-- Active Dispatch Queue -->
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-2">
+                    <h3 class="text-lg font-bold mb-4 text-white">Active Dispatches &amp; Queue</h3>
+                    <div id="dispatch-tickets-list" class="space-y-3">
+                        <!-- Populated via JS -->
                     </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Package Type</label>
-                        <select id="t-package" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                            <option value="10 Mbps (KES 1,000)">10 Mbps (KES 1,000)</option>
-                            <option value="16 Mbps (KES 1,500)">16 Mbps (KES 1,500)</option>
-                            <option value="20 Mbps (KES 2,000)">20 Mbps (KES 2,000)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Ticket Type &amp; Issue</label>
-                        <select id="t-type" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 mb-2 text-white">
-                            <option value="Installation">New Installation</option>
-                            <option value="Support Fault">Support Fault</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                        <textarea id="t-desc" placeholder="Describe issue / installation requirements..." required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white h-20"></textarea>
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-semibold">Assign Technician</label>
-                        <select id="t-tech" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                            <!-- Populated via JS -->
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition">Dispatch Ticket</button>
-                </form>
+                </div>
             </div>
-            <!-- Active Dispatch Queue -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-2">
-                <h3 class="text-lg font-bold mb-4 text-white">Active Dispatches &amp; Queue</h3>
-                <div id="dispatch-tickets-list" class="space-y-3">
+
+            <!-- Daily Raised Tickets & Technician Assignment Table (Below the Dispatch Form & Queue) -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Daily Raised Tickets &amp; Assigned Technicians</h3>
+                        <p class="text-xs text-slate-400">Tabular log of all tickets raised on the selected day and who each ticket was assigned to.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="dispatch-day-filter" class="text-xs text-slate-400 font-semibold">Day:</label>
+                        <input type="date" id="dispatch-day-filter" onchange="renderDailyTicketsTable()" class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <button type="button" onclick="resetDispatchDayToToday()" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 text-xs px-3 py-2 rounded font-semibold transition">Today</button>
+                    </div>
+                </div>
+                <div id="dispatch-daily-tickets-table" class="overflow-x-auto">
                     <!-- Populated via JS -->
                 </div>
             </div>
@@ -258,6 +278,8 @@
 
         let currentUser = null
         let currentProfile = null
+        let cachedDispatchTickets = []
+        let technicianNameById = {}
 
         const loginForm = document.getElementById('login-form')
         const loginBtn = document.getElementById('login-submit-btn')
@@ -462,8 +484,12 @@
 
             if (role === 'super_admin') loadSuperAdminData()
             if (role === 'dispatch') {
-                loadDispatchQueue()
+                const dayInput = document.getElementById('dispatch-day-filter')
+                if (dayInput && !dayInput.value) {
+                    dayInput.value = getLocalDateInputValue()
+                }
                 loadTechniciansDropdown()
+                loadDispatchQueue()
             }
             if (role === 'technician') {
                 loadTechnicianJobs(currentUser.id)
@@ -473,15 +499,86 @@
             if (role === 'maintenance') loadMaintenanceData()
         }
 
+        function getLocalDateInputValue(dateObj = new Date()) {
+            const year = dateObj.getFullYear()
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+            const day = String(dateObj.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
+
+        function getRecordLocalDateKey(isoString) {
+            if (!isoString) return ''
+            const parsed = new Date(isoString)
+            if (Number.isNaN(parsed.getTime())) return String(isoString).slice(0, 10)
+            return getLocalDateInputValue(parsed)
+        }
+
+        window.resetDispatchDayToToday = function() {
+            const dayInput = document.getElementById('dispatch-day-filter')
+            if (dayInput) {
+                dayInput.value = getLocalDateInputValue()
+            }
+            renderDailyTicketsTable()
+        }
+
         // ==========================================
         // DISPATCHER FUNCTIONS
         // ==========================================
         async function loadTechniciansDropdown() {
-            const { data } = await supabase.from('profiles').select('id, full_name, employee_id').eq('role', 'technician').eq('is_active', true)
             const select = document.getElementById('t-tech')
-            if (data) {
-                select.innerHTML = data.map(t => `<option value="${t.id}">${t.full_name} (${t.employee_id})</option>`).join('')
+            if (!select) return
+
+            let technicians = []
+
+            // Primary query: case-insensitive match on technician role, excluding explicitly inactive accounts
+            const { data: roleMatches, error: roleErr } = await supabase
+                .from('profiles')
+                .select('id, full_name, employee_id, role, is_active')
+                .ilike('role', '%tech%')
+
+            if (!roleErr && Array.isArray(roleMatches) && roleMatches.length > 0) {
+                technicians = roleMatches.filter(t => t.is_active !== false)
             }
+
+            // Fallback query: if role filter returned nothing due to RLS or role naming, fetch visible non-admin staff
+            if (technicians.length === 0) {
+                const { data: allProfiles } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, employee_id, role, is_active')
+
+                if (Array.isArray(allProfiles) && allProfiles.length > 0) {
+                    const activeStaff = allProfiles.filter(p => p.is_active !== false)
+                    const techOnly = activeStaff.filter(p => String(p.role || '').toLowerCase().includes('tech'))
+                    technicians = techOnly.length > 0
+                        ? techOnly
+                        : activeStaff.filter(p => !['super_admin', 'dispatch'].includes(String(p.role || '').toLowerCase()))
+                }
+            }
+
+            technicianNameById = {}
+            technicians.forEach(t => {
+                const label = `${t.full_name || 'Technician'}${t.employee_id ? ` (${t.employee_id})` : ''}`
+                technicianNameById[t.id] = label
+            })
+
+            if (technicians.length === 0) {
+                select.innerHTML = `<option value="">No technicians found in profiles</option>`
+                renderDailyTicketsTable()
+                return
+            }
+
+            select.innerHTML =
+                `<option value="">-- Select Technician --</option>` +
+                technicians.map(t => {
+                    const label = `${t.full_name || 'Technician'}${t.employee_id ? ` (${t.employee_id})` : ''}`
+                    return `<option value="${t.id}">${label}</option>`
+                }).join('')
+
+            if (technicians.length === 1) {
+                select.value = technicians[0].id
+            }
+
+            renderDailyTicketsTable()
         }
 
         window.handleCreateTicket = async function(e) {
@@ -495,6 +592,11 @@
             const ticket_type = document.getElementById('t-type').value
             const issue_description = document.getElementById('t-desc').value.trim()
             const assigned_technician_id = document.getElementById('t-tech').value
+
+            if (!assigned_technician_id) {
+                alert('Please select a technician to assign this ticket.')
+                return
+            }
 
             const { data: client, error: cError } = await supabase.from('clients').insert([{
                 account_no, full_name, phone, plot_name, house_no, package_type
@@ -517,19 +619,87 @@
 
             alert('Ticket created and dispatched successfully!')
             e.target.reset()
+            await loadTechniciansDropdown()
             loadDispatchQueue()
+        }
+
+        function resolveAssignedTechLabel(ticket) {
+            if (ticket.profiles?.full_name) {
+                return `${ticket.profiles.full_name}${ticket.profiles.employee_id ? ` (${ticket.profiles.employee_id})` : ''}`
+            }
+            if (ticket.assigned_technician_id && technicianNameById[ticket.assigned_technician_id]) {
+                return technicianNameById[ticket.assigned_technician_id]
+            }
+            return 'Unassigned'
+        }
+
+        window.renderDailyTicketsTable = function() {
+            const container = document.getElementById('dispatch-daily-tickets-table')
+            if (!container) return
+
+            const dayInput = document.getElementById('dispatch-day-filter')
+            const selectedDay = (dayInput && dayInput.value) ? dayInput.value : getLocalDateInputValue()
+
+            const dailyTickets = cachedDispatchTickets.filter(t => getRecordLocalDateKey(t.created_at) === selectedDay)
+
+            if (dailyTickets.length === 0) {
+                container.innerHTML = `<p class="text-sm text-slate-400 py-4">No tickets raised on <span class="text-white font-semibold">${selectedDay}</span>.</p>`
+                return
+            }
+
+            container.innerHTML = `
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-xs uppercase text-slate-400">
+                        <tr>
+                            <th class="p-3">Ticket No</th>
+                            <th class="p-3">Time Raised</th>
+                            <th class="p-3">Client &amp; Account</th>
+                            <th class="p-3">Location</th>
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Assigned Technician</th>
+                            <th class="p-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dailyTickets.map(t => {
+                            const raisedTime = t.created_at
+                                ? new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : '—'
+                            const assignedTech = resolveAssignedTechLabel(t)
+                            const badgeClass = t.status === 'Completed'
+                                ? 'bg-emerald-600 text-white'
+                                : t.status === 'Escalated'
+                                    ? 'bg-rose-600 text-white'
+                                    : 'bg-amber-500 text-slate-900'
+                            return `
+                                <tr class="border-b border-slate-700 hover:bg-slate-900/50">
+                                    <td class="p-3 font-bold text-emerald-400 whitespace-nowrap">${t.ticket_no || '—'}</td>
+                                    <td class="p-3 text-xs text-slate-400 whitespace-nowrap">${raisedTime}</td>
+                                    <td class="p-3 font-semibold text-white">${t.clients?.full_name || 'Client'} <span class="text-xs text-slate-400 font-normal">(${t.clients?.account_no || 'KB0000'})</span></td>
+                                    <td class="p-3 text-xs text-slate-300">${t.clients?.plot_name || ''}${t.clients?.house_no ? `, Hse ${t.clients.house_no}` : ''}</td>
+                                    <td class="p-3 text-xs text-slate-300">${t.ticket_type || '—'}</td>
+                                    <td class="p-3 font-semibold text-emerald-300">${assignedTech}</td>
+                                    <td class="p-3"><span class="px-2.5 py-1 rounded text-xs font-semibold ${badgeClass}">${t.status || 'Assigned'}</span></td>
+                                </tr>
+                            `
+                        }).join('')}
+                    </tbody>
+                </table>
+            `
         }
 
         async function loadDispatchQueue() {
             const { data } = await supabase.from('tickets').select('*, clients(*), profiles!assigned_technician_id(full_name, employee_id)').order('created_at', { ascending: false })
             const container = document.getElementById('dispatch-tickets-list')
             if (!data) return
+            cachedDispatchTickets = data
+            renderDailyTicketsTable()
             container.innerHTML = data.map(t => `
                 <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex justify-between items-center">
                     <div>
                         <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">${t.ticket_no}</span>
                         <h4 class="font-bold text-white mt-1">${t.clients?.full_name || 'Client'} (${t.clients?.account_no || 'KB0000'})</h4>
-                        <p class="text-xs text-slate-400">${t.clients?.plot_name}, House ${t.clients?.house_no} | Tech: <strong>${t.profiles?.full_name || 'Unassigned'}</strong></p>
+                        <p class="text-xs text-slate-400">${t.clients?.plot_name}, House ${t.clients?.house_no} | Tech: <strong>${resolveAssignedTechLabel(t)}</strong></p>
                     </div>
                     <span class="px-3 py-1 rounded text-xs font-semibold ${t.status === 'Completed' ? 'bg-emerald-600 text-white' : t.status === 'Escalated' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-slate-900'}">${t.status}</span>
                 </div>
