@@ -51,7 +51,7 @@
         <!-- 1. LOGIN VIEW -->
         <section id="login-view" class="max-w-md mx-auto bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-700 mt-12">
             <h2 class="text-2xl font-bold mb-6 text-center text-white">Staff Portal Login</h2>
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+            <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Work Email</label>
                     <input type="email" id="login-email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
@@ -60,7 +60,7 @@
                     <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Password</label>
                     <input type="password" id="login-password" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
                 </div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition shadow-lg">Access Dashboard</button>
+                <button id="login-submit-btn" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition shadow-lg">Access Dashboard</button>
             </form>
         </section>
 
@@ -259,56 +259,78 @@
         let currentUser = null
         let currentProfile = null
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session) {
-                await handleSuccessfulLogin(session.user)
-            }
-        })
+        const loginForm = document.getElementById('login-form')
+        const loginBtn = document.getElementById('login-submit-btn')
 
-        window.handleLogin = async function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault()
             const email = document.getElementById('login-email').value.trim().toLowerCase()
             const password = document.getElementById('login-password').value
 
-            let { data, error } = await supabase.auth.signInWithPassword({ email, password })
+            loginBtn.disabled = true
+            loginBtn.textContent = 'Signing in...'
 
-            // If Super Admin seed credentials aren't in Auth yet, sign up via Supabase Auth cleanly
-            if (error && email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASS) {
-                const signUpRes = await supabase.auth.signUp({
-                    email: SUPER_ADMIN_EMAIL,
-                    password: SUPER_ADMIN_PASS,
-                    options: {
-                        data: {
-                            employee_id: 'EMP-0001',
-                            full_name: 'Frank Kering (Super Admin)',
-                            role: 'super_admin'
+            try {
+                let { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+                if (error && email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASS) {
+                    const signUpRes = await supabase.auth.signUp({
+                        email: SUPER_ADMIN_EMAIL,
+                        password: SUPER_ADMIN_PASS,
+                        options: {
+                            data: {
+                                employee_id: 'EMP-0001',
+                                full_name: 'Frank Kering (Super Admin)',
+                                role: 'super_admin'
+                            }
                         }
+                    })
+                    if (signUpRes.error) {
+                        throw signUpRes.error
                     }
-                })
-                if (signUpRes.data?.session) {
-                    data = signUpRes.data
-                    error = null
-                } else if (!signUpRes.error) {
-                    const retryLogin = await supabase.auth.signInWithPassword({ email, password })
-                    data = retryLogin.data
-                    error = retryLogin.error
+                    if (signUpRes.data?.session) {
+                        data = signUpRes.data
+                        error = null
+                    } else {
+                        const retryLogin = await supabase.auth.signInWithPassword({ email, password })
+                        data = retryLogin.data
+                        error = retryLogin.error
+                    }
                 }
-            }
 
-            if (error || !data?.user) {
-                alert('Login Failed: ' + (error?.message || 'Invalid credentials'))
-                return
-            }
+                if (error || !data?.user) {
+                    alert('Login Failed: ' + (error?.message || 'Invalid credentials or email confirmation required.'))
+                    return
+                }
 
-            await handleSuccessfulLogin(data.user)
-        }
+                await handleSuccessfulLogin(data.user)
+            } catch (err) {
+                console.error('Login error:', err)
+                alert('Login Error: ' + (err?.message || err))
+            } finally {
+                loginBtn.disabled = false
+                loginBtn.textContent = 'Access Dashboard'
+            }
+        })
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (session?.user) {
+                    await handleSuccessfulLogin(session.user)
+                }
+            } catch (err) {
+                console.error('Session check error:', err)
+            }
+        })
 
         async function handleSuccessfulLogin(user) {
             currentUser = user
 
             if (user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
-                await supabase.rpc('promote_seed_super_admin').catch(() => {})
+                try {
+                    await supabase.rpc('promote_seed_super_admin')
+                } catch (_) {}
             }
 
             let { data: profile, error } = await supabase
@@ -318,7 +340,7 @@
                 .single()
 
             if ((!profile || error) && user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
-                const { data: upserted } = await supabase
+                const { data: upserted, error: upsertErr } = await supabase
                     .from('profiles')
                     .upsert({
                         id: user.id,
@@ -330,11 +352,11 @@
                     })
                     .select()
                     .single()
-                profile = upserted
+                if (!upsertErr) profile = upserted
             }
 
             if (!profile) {
-                alert('User profile not found in database.')
+                alert('Logged in, but no profile record was found in public.profiles.')
                 return
             }
 
