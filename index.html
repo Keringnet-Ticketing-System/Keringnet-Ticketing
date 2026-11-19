@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keringnet Broadband - Operations & Ticketing Portal</title>
+    <title>Keringnet Ticketing System - Keringnet Broadband</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS v2 CDN -->
@@ -23,13 +23,23 @@
     <!-- MAIN APP CONTAINER -->
     <div id="app" class="container mx-auto px-4 py-8">
 
-        <!-- HEADER -->
-        <header class="flex justify-between items-center mb-8 pb-4 border-b border-slate-800">
+        <!-- HEADER WITH KERINGNET BROADBAND LOGO -->
+        <header class="flex flex-wrap justify-between items-center gap-4 mb-8 pb-4 border-b border-slate-800">
             <div class="flex items-center space-x-3">
-                <div class="bg-emerald-500 text-slate-900 font-black px-3 py-1.5 rounded-lg text-xl tracking-wider">KN</div>
+                <!-- Keringnet Broadband Logo SVG -->
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg border border-emerald-300/40 shrink-0">
+                    <svg class="w-7 h-7 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                        <circle cx="12" cy="20" r="1.5" fill="currentColor"></circle>
+                    </svg>
+                </div>
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white">Keringnet Operations</h1>
-                    <p class="text-xs text-slate-400">Mowlem & Kwa Maji Field Dispatch System</p>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                        Keringnet Ticketing System <span class="text-emerald-400 font-black">| K</span>eringnet Broadband
+                    </h1>
+                    <p class="text-xs text-slate-400">Mowlem &amp; Kwa Maji Field Operations &amp; Dispatch System</p>
                 </div>
             </div>
             <div id="user-session-box" class="hidden flex items-center space-x-4">
@@ -54,7 +64,7 @@
             </form>
         </section>
 
-        <!-- 2. DASHBOARD PANELS (Hidden until login) -->
+        <!-- 2. DASHBOARD PANELS (Strict Role Isolation: Only matching role panel is shown) -->
 
         <!-- SUPER ADMIN DASHBOARD -->
         <div id="panel-super_admin" class="dashboard-panel hidden space-y-6">
@@ -85,45 +95,48 @@
                 </div>
             </div>
 
-            <!-- STAFF MANAGEMENT SECTION -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-                <!-- Create Staff Form -->
+            <!-- ADD / DELETE STAFF USER MODULE -->
+            <div id="admin-staff-module" class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                <!-- Add Staff Form -->
                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-1">
-                    <h3 class="text-lg font-bold mb-4 text-white">Add New Staff Member</h3>
+                    <h3 class="text-lg font-bold mb-4 text-white">Add Staff User</h3>
                     <form onsubmit="handleCreateStaff(event)" class="space-y-3">
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">Staff Full Name</label>
+                            <label class="text-xs text-slate-400 font-semibold">Full Name</label>
                             <input type="text" id="staff-name" placeholder="e.g. Paul Aseka" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">Work Email</label>
-                            <input type="email" id="staff-email" placeholder="paul@keringnet.co.ke" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                            <label class="text-xs text-slate-400 font-semibold">Employee ID</label>
+                            <input type="text" id="staff-emp-id" placeholder="e.g. EMP-002" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">Temporary Password</label>
-                            <input type="password" id="staff-password" placeholder="••••••••" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-xs text-slate-400 font-semibold">Phone Number</label>
-                            <input type="text" id="staff-phone" placeholder="0712345678" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-xs text-slate-400 font-semibold">System Role</label>
+                            <label class="text-xs text-slate-400 font-semibold">Job Description / Role</label>
                             <select id="staff-role" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
-                                <option value="technician">Technician</option>
+                                <option value="qc">QC (Quality Control)</option>
                                 <option value="dispatch">Dispatcher</option>
-                                <option value="qc">Quality Control (QC)</option>
-                                <option value="maintenance">Maintenance Specialist</option>
-                                <option value="super_admin">Super Admin</option>
+                                <option value="technician">Technician</option>
+                                <option value="maintenance">Maintenance</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Email Address</label>
+                            <input type="email" id="staff-email" placeholder="staff@keringnet.co.ke" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Assigned Login Password</label>
+                            <input type="password" id="staff-password" placeholder="Set login password" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-semibold">Phone Number (Optional)</label>
+                            <input type="text" id="staff-phone" placeholder="0712345678" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                         </div>
                         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition">Create Staff Account</button>
                     </form>
                 </div>
 
-                <!-- Staff Directory List -->
+                <!-- Staff Directory & Delete User List -->
                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-2">
-                    <h3 class="text-lg font-bold mb-4 text-white">Active Staff Directory</h3>
+                    <h3 class="text-lg font-bold mb-4 text-white">Staff Directory (Add / Delete Users)</h3>
                     <div id="staff-directory-list" class="overflow-x-auto">
                         <!-- Populated via JS -->
                     </div>
@@ -135,7 +148,7 @@
         <div id="panel-dispatch" class="dashboard-panel hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Create Ticket Form -->
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-1">
-                <h3 class="text-lg font-bold mb-4 text-white">Create Client & Ticket</h3>
+                <h3 class="text-lg font-bold mb-4 text-white">Create Client &amp; Ticket</h3>
                 <form onsubmit="handleCreateTicket(event)" class="space-y-3">
                     <div>
                         <label class="text-xs text-slate-400 font-semibold">Account Number</label>
@@ -168,7 +181,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs text-slate-400 font-semibold">Ticket Type & Issue</label>
+                        <label class="text-xs text-slate-400 font-semibold">Ticket Type &amp; Issue</label>
                         <select id="t-type" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 mb-2 text-white">
                             <option value="Installation">New Installation</option>
                             <option value="Support Fault">Support Fault</option>
@@ -187,18 +200,18 @@
             </div>
             <!-- Active Dispatch Queue -->
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 lg:col-span-2">
-                <h3 class="text-lg font-bold mb-4 text-white">Active Dispatches & Queue</h3>
+                <h3 class="text-lg font-bold mb-4 text-white">Active Dispatches &amp; Queue</h3>
                 <div id="dispatch-tickets-list" class="space-y-3">
                     <!-- Populated via JS -->
                 </div>
             </div>
         </div>
 
-        <!-- TECHNICIAN DASHBOARD -->
+        <!-- TECHNICIAN DASHBOARD (Strict: Only tickets assigned to this technician) -->
         <div id="panel-technician" class="dashboard-panel hidden space-y-6">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
                 <h3 class="text-xl font-bold mb-2 text-white">My Assigned Field Jobs</h3>
-                <p class="text-sm text-slate-400 mb-6">Real-time dispatches sent directly to your device.</p>
+                <p class="text-sm text-slate-400 mb-6">Real-time dispatches assigned exclusively to your account.</p>
                 <div id="technician-jobs-list" class="space-y-4">
                     <!-- Populated via JS -->
                 </div>
@@ -208,8 +221,19 @@
         <!-- QC DASHBOARD -->
         <div id="panel-qc" class="dashboard-panel hidden space-y-6">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <h3 class="text-xl font-bold mb-4 text-white">Quality Control & Escalations</h3>
+                <h3 class="text-xl font-bold mb-4 text-white">Quality Control &amp; Escalations</h3>
                 <div id="qc-tickets-list" class="space-y-4">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MAINTENANCE DASHBOARD -->
+        <div id="panel-maintenance" class="dashboard-panel hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-white">Maintenance &amp; Specialized Faults</h3>
+                <p class="text-sm text-slate-400 mb-6">Fiber cuts, network nodes, and escalated technical maintenance tasks.</p>
+                <div id="maintenance-tickets-list" class="space-y-4">
                     <!-- Populated via JS -->
                 </div>
             </div>
@@ -226,7 +250,10 @@
         // ==========================================
         const SUPABASE_URL = 'https://fbdclcnwhccjhjefoaqp.supabase.co'
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiZGNsY253aGNjamhqZWZvYXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMjU5MDgsImV4cCI6MjExMDYwMTkwOH0.8Hchx-c9rYn5m1TNI2fl2ccQHpjHaH8CZGT5kMLAPmE'
-        
+
+        const SUPER_ADMIN_EMAIL = 'frank_kering@gmail.com'
+        const SUPER_ADMIN_PASS = 'Sysadmin001'
+
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
         let currentUser = null
@@ -241,34 +268,79 @@
 
         window.handleLogin = async function(e) {
             e.preventDefault()
-            const email = document.getElementById('login-email').value
+            const email = document.getElementById('login-email').value.trim().toLowerCase()
             const password = document.getElementById('login-password').value
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-            if (error) {
-                alert('Login Failed: ' + error.message)
+            let { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+            // Automatic fallback sign-up for Super Admin if not yet registered in Auth
+            if (error && email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASS) {
+                const signUpRes = await supabase.auth.signUp({
+                    email: SUPER_ADMIN_EMAIL,
+                    password: SUPER_ADMIN_PASS,
+                    options: {
+                        data: {
+                            employee_id: 'EMP-0001',
+                            full_name: 'Frank Kering (Super Admin)',
+                            role: 'super_admin'
+                        }
+                    }
+                })
+                if (!signUpRes.error) {
+                    const retryLogin = await supabase.auth.signInWithPassword({ email, password })
+                    data = retryLogin.data
+                    error = retryLogin.error
+                }
+            }
+
+            if (error || !data?.user) {
+                alert('Login Failed: ' + (error?.message || 'Invalid credentials'))
                 return
             }
+
             await handleSuccessfulLogin(data.user)
         }
 
         async function handleSuccessfulLogin(user) {
             currentUser = user
-            const { data: profile, error } = await supabase
+            let { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
                 .single()
 
-            if (error || !profile) {
+            // Ensure Super Admin profile exists if logging in as frank_kering@gmail.com
+            if ((!profile || error) && user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+                const { data: upserted } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: user.id,
+                        employee_id: 'EMP-0001',
+                        full_name: 'Frank Kering (Super Admin)',
+                        email: SUPER_ADMIN_EMAIL,
+                        role: 'super_admin',
+                        is_active: true
+                    })
+                    .select()
+                    .single()
+                profile = upserted
+            }
+
+            if (!profile) {
                 alert('User profile not found in database.')
+                return
+            }
+
+            if (!profile.is_active) {
+                alert('Your account is inactive. Contact Super Admin.')
+                await supabase.auth.signOut()
                 return
             }
 
             currentProfile = profile
             document.getElementById('login-view').classList.add('hidden')
             document.getElementById('user-session-box').classList.remove('hidden')
-            document.getElementById('session-user-badge').textContent = `${profile.full_name} (${profile.role.toUpperCase()})`
+            document.getElementById('session-user-badge').textContent = `${profile.full_name} [${profile.employee_id}] (${profile.role.toUpperCase()})`
 
             renderDashboard(profile.role)
         }
@@ -279,6 +351,7 @@
         }
 
         function renderDashboard(role) {
+            // Hide ALL panels first so user only sees their assigned role portal
             document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.add('hidden'))
             const panel = document.getElementById(`panel-${role}`)
             if (panel) panel.classList.remove('hidden')
@@ -293,39 +366,38 @@
                 initRealtimeListener(currentUser.id)
             }
             if (role === 'qc') loadQcData()
+            if (role === 'maintenance') loadMaintenanceData()
         }
 
         // ==========================================
         // DISPATCHER FUNCTIONS
         // ==========================================
         async function loadTechniciansDropdown() {
-            const { data } = await supabase.from('profiles').select('id, full_name').eq('role', 'technician')
+            const { data } = await supabase.from('profiles').select('id, full_name, employee_id').eq('role', 'technician').eq('is_active', true)
             const select = document.getElementById('t-tech')
             if (data) {
-                select.innerHTML = data.map(t => `<option value="${t.id}">${t.full_name}</option>`).join('')
+                select.innerHTML = data.map(t => `<option value="${t.id}">${t.full_name} (${t.employee_id})</option>`).join('')
             }
         }
 
         window.handleCreateTicket = async function(e) {
             e.preventDefault()
-            const account_no = document.getElementById('t-account').value
-            const full_name = document.getElementById('t-name').value
-            const phone = document.getElementById('t-phone').value
-            const plot_name = document.getElementById('t-plot').value
-            const house_no = document.getElementById('t-house').value
+            const account_no = document.getElementById('t-account').value.trim()
+            const full_name = document.getElementById('t-name').value.trim()
+            const phone = document.getElementById('t-phone').value.trim()
+            const plot_name = document.getElementById('t-plot').value.trim()
+            const house_no = document.getElementById('t-house').value.trim()
             const package_type = document.getElementById('t-package').value
             const ticket_type = document.getElementById('t-type').value
-            const issue_description = document.getElementById('t-desc').value
+            const issue_description = document.getElementById('t-desc').value.trim()
             const assigned_technician_id = document.getElementById('t-tech').value
 
-            // 1. Insert Client
             const { data: client, error: cError } = await supabase.from('clients').insert([{
                 account_no, full_name, phone, plot_name, house_no, package_type
             }]).select().single()
 
             if (cError) { alert('Error creating client: ' + cError.message); return; }
 
-            // 2. Insert Ticket
             const ticket_no = 'TKT-' + Math.floor(1000 + Math.random() * 9000)
             const { error: tError } = await supabase.from('tickets').insert([{
                 ticket_no,
@@ -345,7 +417,7 @@
         }
 
         async function loadDispatchQueue() {
-            const { data } = await supabase.from('tickets').select('*, clients(*), profiles!assigned_technician_id(full_name)').order('created_at', { ascending: false })
+            const { data } = await supabase.from('tickets').select('*, clients(*), profiles!assigned_technician_id(full_name, employee_id)').order('created_at', { ascending: false })
             const container = document.getElementById('dispatch-tickets-list')
             if (!data) return
             container.innerHTML = data.map(t => `
@@ -361,13 +433,18 @@
         }
 
         // ==========================================
-        // TECHNICIAN FUNCTIONS & REALTIME
+        // TECHNICIAN FUNCTIONS & REALTIME (STRICTLY ASSIGNED JOBS ONLY)
         // ==========================================
         async function loadTechnicianJobs(techId) {
-            const { data } = await supabase.from('tickets').select('*, clients(*)').eq('assigned_technician_id', techId).order('created_at', { ascending: false })
+            const { data } = await supabase
+                .from('tickets')
+                .select('*, clients(*)')
+                .eq('assigned_technician_id', techId)
+                .order('created_at', { ascending: false })
+
             const container = document.getElementById('technician-jobs-list')
             if (!data || data.length === 0) {
-                container.innerHTML = `<p class="text-slate-400">No active jobs assigned.</p>`
+                container.innerHTML = `<p class="text-slate-400">No active jobs assigned to you.</p>`
                 return
             }
             container.innerHTML = data.map(j => `
@@ -393,10 +470,17 @@
         }
 
         function initRealtimeListener(techId) {
-            supabase.channel('public:tickets')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets', filter: `assigned_technician_id=eq.${techId}` }, payload => {
-                    playChime()
-                    showBanner("New Job Assigned!", payload.new.issue_description)
+            supabase.channel(`tech-tickets-${techId}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tickets',
+                    filter: `assigned_technician_id=eq.${techId}`
+                }, payload => {
+                    if (payload.eventType === 'INSERT') {
+                        playChime()
+                        showBanner("New Job Assigned!", payload.new.issue_description)
+                    }
                     loadTechnicianJobs(techId)
                 })
                 .subscribe()
@@ -405,7 +489,11 @@
         window.completeJob = async function(ticketId) {
             const router_serial = prompt("Enter Installed Router / Meter Serial Number:")
             if (!router_serial) return
-            const { error } = await supabase.from('tickets').update({ status: 'Completed', router_serial, completion_time: new Date() }).eq('id', ticketId)
+            const { error } = await supabase
+                .from('tickets')
+                .update({ status: 'Completed', router_serial, completion_time: new Date().toISOString() })
+                .eq('id', ticketId)
+                .eq('assigned_technician_id', currentUser.id)
             if (error) alert(error.message)
             else { alert('Job marked completed!'); loadTechnicianJobs(currentUser.id); }
         }
@@ -413,7 +501,11 @@
         window.escalateJob = async function(ticketId) {
             const qc_notes = prompt("Reason for escalation (e.g. port full / client not home):")
             if (!qc_notes) return
-            const { error } = await supabase.from('tickets').update({ status: 'Escalated', qc_notes }).eq('id', ticketId)
+            const { error } = await supabase
+                .from('tickets')
+                .update({ status: 'Escalated', qc_notes, escalation_reason: qc_notes })
+                .eq('id', ticketId)
+                .eq('assigned_technician_id', currentUser.id)
             if (error) alert(error.message)
             else { alert('Job escalated to QC/Dispatch.'); loadTechnicianJobs(currentUser.id); }
         }
@@ -432,32 +524,50 @@
         }
 
         // ==========================================
-        // SUPER ADMIN: STAFF CREATION & DIRECTORY
+        // SUPER ADMIN: ADD & DELETE STAFF USERS
         // ==========================================
         window.handleCreateStaff = async function(e) {
             e.preventDefault()
-            const full_name = document.getElementById('staff-name').value
-            const email = document.getElementById('staff-email').value
-            const password = document.getElementById('staff-password').value
-            const phone = document.getElementById('staff-phone').value
+            const full_name = document.getElementById('staff-name').value.trim()
+            const employee_id = document.getElementById('staff-emp-id').value.trim()
             const role = document.getElementById('staff-role').value
+            const email = document.getElementById('staff-email').value.trim().toLowerCase()
+            const password = document.getElementById('staff-password').value
+            const phone = document.getElementById('staff-phone').value.trim()
 
             const { error } = await supabase.rpc('admin_create_staff_user', {
                 user_email: email,
                 user_password: password,
                 user_full_name: full_name,
+                user_employee_id: employee_id,
                 user_role: role,
                 user_phone: phone
             })
 
             if (error) {
-                alert('Error creating staff account: ' + error.message)
+                alert('Error creating staff user: ' + error.message)
                 return
             }
 
-            alert(`Staff account for ${full_name} (${role.toUpperCase()}) created successfully!`)
+            alert(`Staff user ${full_name} (${employee_id} - ${role.toUpperCase()}) created and can now log in!`)
             e.target.reset()
-            loadSuperAdminData()
+            loadStaffDirectory()
+        }
+
+        window.handleDeleteStaff = async function(userId, staffName) {
+            if (!confirm(`Are you sure you want to delete staff user "${staffName}"? This removes their login access.`)) return
+
+            const { error } = await supabase.rpc('admin_delete_staff_user', {
+                target_user_id: userId
+            })
+
+            if (error) {
+                alert('Error deleting staff user: ' + error.message)
+                return
+            }
+
+            alert(`Staff user "${staffName}" deleted.`)
+            loadStaffDirectory()
         }
 
         async function loadStaffDirectory() {
@@ -469,19 +579,26 @@
                 <table class="w-full text-left text-sm text-slate-300">
                     <thead class="bg-slate-900 text-xs uppercase text-slate-400">
                         <tr>
+                            <th class="p-3">Emp ID</th>
                             <th class="p-3">Name</th>
-                            <th class="p-3">Role</th>
-                            <th class="p-3">Phone</th>
-                            <th class="p-3">Status</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Job Role</th>
+                            <th class="p-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${staff.map(s => `
                             <tr class="border-b border-slate-700">
+                                <td class="p-3 font-mono text-xs text-emerald-400">${s.employee_id}</td>
                                 <td class="p-3 font-bold text-white">${s.full_name}</td>
-                                <td class="p-3"><span class="bg-slate-700 text-emerald-400 px-2 py-0.5 rounded text-xs font-semibold">${s.role.toUpperCase()}</span></td>
-                                <td class="p-3">${s.phone || 'N/A'}</td>
-                                <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${s.is_active ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+                                <td class="p-3 text-xs text-slate-300">${s.email}</td>
+                                <td class="p-3"><span class="bg-slate-700 text-emerald-400 px-2 py-0.5 rounded text-xs font-semibold uppercase">${s.role}</span></td>
+                                <td class="p-3">
+                                    ${s.id !== currentUser.id
+                                        ? `<button onclick="handleDeleteStaff('${s.id}', '${s.full_name.replace(/'/g, "\\'")}')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1 rounded font-semibold">Delete</button>`
+                                        : `<span class="text-xs text-slate-500">Current Admin</span>`
+                                    }
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -490,43 +607,43 @@
         }
 
         // ==========================================
-        // SUPER ADMIN & QC FUNCTIONS
+        // SUPER ADMIN, QC & MAINTENANCE FUNCTIONS
         // ==========================================
         async function loadSuperAdminData() {
             const { data: tickets } = await supabase.from('tickets').select('*, clients(*), profiles!assigned_technician_id(full_name)')
-            if (!tickets) return
-            document.getElementById('stat-total').textContent = tickets.length
-            document.getElementById('stat-pending').textContent = tickets.filter(t => t.status === 'Pending').length
-            document.getElementById('stat-completed').textContent = tickets.filter(t => t.status === 'Completed').length
-            document.getElementById('stat-escalated').textContent = tickets.filter(t => t.status === 'Escalated').length
+            if (tickets) {
+                document.getElementById('stat-total').textContent = tickets.length
+                document.getElementById('stat-pending').textContent = tickets.filter(t => t.status === 'Pending').length
+                document.getElementById('stat-completed').textContent = tickets.filter(t => t.status === 'Completed').length
+                document.getElementById('stat-escalated').textContent = tickets.filter(t => t.status === 'Escalated').length
 
-            const container = document.getElementById('admin-tickets-list')
-            container.innerHTML = `
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-900 text-xs uppercase text-slate-400">
-                        <tr>
-                            <th class="p-3">Ticket</th>
-                            <th class="p-3">Client</th>
-                            <th class="p-3">Type</th>
-                            <th class="p-3">Assigned Tech</th>
-                            <th class="p-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tickets.map(t => `
-                            <tr class="border-b border-slate-700">
-                                <td class="p-3 font-bold text-emerald-400">${t.ticket_no}</td>
-                                <td class="p-3">${t.clients?.full_name} (${t.clients?.account_no})</td>
-                                <td class="p-3">${t.ticket_type}</td>
-                                <td class="p-3">${t.profiles?.full_name || 'Unassigned'}</td>
-                                <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${t.status === 'Completed' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-900'}">${t.status}</span></td>
+                const container = document.getElementById('admin-tickets-list')
+                container.innerHTML = `
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900 text-xs uppercase text-slate-400">
+                            <tr>
+                                <th class="p-3">Ticket</th>
+                                <th class="p-3">Client</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Assigned Tech</th>
+                                <th class="p-3">Status</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `
+                        </thead>
+                        <tbody>
+                            ${tickets.map(t => `
+                                <tr class="border-b border-slate-700">
+                                    <td class="p-3 font-bold text-emerald-400">${t.ticket_no}</td>
+                                    <td class="p-3">${t.clients?.full_name} (${t.clients?.account_no})</td>
+                                    <td class="p-3">${t.ticket_type}</td>
+                                    <td class="p-3">${t.profiles?.full_name || 'Unassigned'}</td>
+                                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${t.status === 'Completed' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-900'}">${t.status}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `
+            }
 
-            // Also load the staff directory table
             loadStaffDirectory()
         }
 
@@ -544,6 +661,31 @@
                         <h4 class="font-bold text-white mt-1">${t.clients?.full_name} (${t.clients?.account_no})</h4>
                         <p class="text-xs text-slate-400">Reason: ${t.qc_notes || 'None provided'}</p>
                     </div>
+                </div>
+            `).join('')
+        }
+
+        async function loadMaintenanceData() {
+            const { data } = await supabase
+                .from('tickets')
+                .select('*, clients(*), profiles!assigned_technician_id(full_name)')
+                .or('ticket_type.eq.Maintenance,status.eq.Escalated')
+                .order('created_at', { ascending: false })
+
+            const container = document.getElementById('maintenance-tickets-list')
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="text-slate-400">No maintenance or escalated fault tickets right now.</p>`
+                return
+            }
+            container.innerHTML = data.map(t => `
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-300">${t.ticket_no} - ${t.ticket_type}</span>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-800 text-emerald-400">${t.status}</span>
+                    </div>
+                    <h4 class="font-bold text-white">${t.clients?.full_name || 'Client'} (${t.clients?.account_no || ''}) — ${t.clients?.plot_name || ''} ${t.clients?.house_no || ''}</h4>
+                    <p class="text-sm text-slate-300">${t.issue_description}</p>
+                    ${t.qc_notes ? `<p class="text-xs text-rose-400">Escalation / QC Note: ${t.qc_notes}</p>` : ''}
                 </div>
             `).join('')
         }
