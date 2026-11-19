@@ -191,7 +191,10 @@
                             <textarea id="t-desc" placeholder="Describe issue / installation requirements..." required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white h-20"></textarea>
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 font-semibold">Assign Technician</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-xs text-slate-400 font-semibold">Assign Technician</label>
+                                <button type="button" onclick="refreshRegisteredTechnicians()" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">Refresh DB List</button>
+                            </div>
                             <select id="t-tech" required class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-white">
                                 <!-- Populated via JS -->
                             </select>
@@ -524,34 +527,32 @@
         // ==========================================
         // DISPATCHER FUNCTIONS
         // ==========================================
+        window.refreshRegisteredTechnicians = async function() {
+            await loadTechniciansDropdown()
+        }
+
         async function loadTechniciansDropdown() {
             const select = document.getElementById('t-tech')
             if (!select) return
 
-            // Strictly pull registered technicians from Supabase public.profiles (role = technician)
-            let { data: techRows, error: techErr } = await supabase
+            // Point strictly to technicians registered in public.profiles (role = 'technician')
+            const { data: techRows, error: techErr } = await supabase
                 .from('profiles')
                 .select('id, full_name, employee_id, role, is_active')
-                .ilike('role', '%technician%')
+                .ilike('role', 'technician')
 
             if (techErr) {
-                console.error('Error loading technicians from public.profiles:', techErr)
-                const fallbackRes = await supabase
-                    .from('profiles')
-                    .select('id, full_name, employee_id, role, is_active')
-                if (!fallbackRes.error && Array.isArray(fallbackRes.data)) {
-                    techRows = fallbackRes.data.filter(r =>
-                        String(r.role || '').trim().toLowerCase().includes('technician')
-                    )
-                }
+                console.error('Error querying registered technicians in public.profiles:', techErr)
+                select.innerHTML = `<option value="">Error loading technicians from database</option>`
+                renderDailyTicketsTable()
+                return
             }
 
             const uniqueMap = new Map()
             ;(Array.isArray(techRows) ? techRows : []).forEach(row => {
                 if (!row || !row.id) return
                 if (row.is_active === false) return
-                const roleNormalized = String(row.role || '').trim().toLowerCase()
-                if (!roleNormalized.includes('technician')) return
+                if (String(row.role || '').trim().toLowerCase() !== 'technician') return
                 uniqueMap.set(row.id, row)
             })
 
@@ -566,13 +567,13 @@
             })
 
             if (technicians.length === 0) {
-                select.innerHTML = `<option value="">No registered technicians in database</option>`
+                select.innerHTML = `<option value="">No registered technicians found</option>`
                 renderDailyTicketsTable()
                 return
             }
 
             select.innerHTML =
-                `<option value="">-- Select Technician --</option>` +
+                `<option value="">-- Select Registered Technician --</option>` +
                 technicians.map(t => {
                     const label = `${t.full_name || 'Technician'}${t.employee_id ? ` (${t.employee_id})` : ''}`
                     return `<option value="${t.id}">${label}</option>`
