@@ -528,32 +528,36 @@
             const select = document.getElementById('t-tech')
             if (!select) return
 
-            let technicians = []
-
-            // Primary query: case-insensitive match on technician role, excluding explicitly inactive accounts
-            const { data: roleMatches, error: roleErr } = await supabase
+            // Strictly pull registered technicians from Supabase public.profiles (role = technician)
+            let { data: techRows, error: techErr } = await supabase
                 .from('profiles')
                 .select('id, full_name, employee_id, role, is_active')
-                .ilike('role', '%tech%')
+                .ilike('role', '%technician%')
 
-            if (!roleErr && Array.isArray(roleMatches) && roleMatches.length > 0) {
-                technicians = roleMatches.filter(t => t.is_active !== false)
-            }
-
-            // Fallback query: if role filter returned nothing due to RLS or role naming, fetch visible non-admin staff
-            if (technicians.length === 0) {
-                const { data: allProfiles } = await supabase
+            if (techErr) {
+                console.error('Error loading technicians from public.profiles:', techErr)
+                const fallbackRes = await supabase
                     .from('profiles')
                     .select('id, full_name, employee_id, role, is_active')
-
-                if (Array.isArray(allProfiles) && allProfiles.length > 0) {
-                    const activeStaff = allProfiles.filter(p => p.is_active !== false)
-                    const techOnly = activeStaff.filter(p => String(p.role || '').toLowerCase().includes('tech'))
-                    technicians = techOnly.length > 0
-                        ? techOnly
-                        : activeStaff.filter(p => !['super_admin', 'dispatch'].includes(String(p.role || '').toLowerCase()))
+                if (!fallbackRes.error && Array.isArray(fallbackRes.data)) {
+                    techRows = fallbackRes.data.filter(r =>
+                        String(r.role || '').trim().toLowerCase().includes('technician')
+                    )
                 }
             }
+
+            const uniqueMap = new Map()
+            ;(Array.isArray(techRows) ? techRows : []).forEach(row => {
+                if (!row || !row.id) return
+                if (row.is_active === false) return
+                const roleNormalized = String(row.role || '').trim().toLowerCase()
+                if (!roleNormalized.includes('technician')) return
+                uniqueMap.set(row.id, row)
+            })
+
+            const technicians = Array.from(uniqueMap.values()).sort((a, b) =>
+                String(a.full_name || '').localeCompare(String(b.full_name || ''))
+            )
 
             technicianNameById = {}
             technicians.forEach(t => {
@@ -562,7 +566,7 @@
             })
 
             if (technicians.length === 0) {
-                select.innerHTML = `<option value="">No technicians found in profiles</option>`
+                select.innerHTML = `<option value="">No registered technicians in database</option>`
                 renderDailyTicketsTable()
                 return
             }
