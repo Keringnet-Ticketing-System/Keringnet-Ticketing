@@ -324,6 +324,104 @@
             }
         })
 
+        async function resolveOrProvisionProfile(user) {
+            const cleanEmail = (user.email || '').trim().toLowerCase()
+            const isSeedAdmin = cleanEmail === SUPER_ADMIN_EMAIL
+            const allowedRoles = ['super_admin', 'dispatch', 'technician', 'qc', 'maintenance']
+            const metaRole = user.user_metadata?.role
+            const resolvedRole = isSeedAdmin
+                ? 'super_admin'
+                : (allowedRoles.includes(metaRole) ? metaRole : 'technician')
+            const resolvedEmpId = isSeedAdmin
+                ? 'EMP-0001'
+                : (user.user_metadata?.employee_id || ('EMP-' + user.id.replace(/-/g, '').slice(0, 6).toUpperCase()))
+            const resolvedName = isSeedAdmin
+                ? 'Frank Kering (Super Admin)'
+                : (user.user_metadata?.full_name || cleanEmail.split('@')[0] || 'Staff Member')
+            const resolvedPhone = user.user_metadata?.phone || ''
+
+            // 1. Check by auth user id
+            let { data: byId } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle()
+
+            if (byId) {
+                if (isSeedAdmin && byId.role !== 'super_admin') {
+                    const { data: updatedAdmin } = await supabase
+                        .from('profiles')
+                        .update({ role: 'super_admin', is_active: true })
+                        .eq('id', user.id)
+                        .select()
+                        .single()
+                    if (updatedAdmin) return updatedAdmin
+                }
+                return byId
+            }
+
+            // 2. Check by email in case a profile row already exists with another id
+            if (cleanEmail) {
+                const { data: byEmail } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .ilike('email', cleanEmail)
+                    .maybeSingle()
+
+                if (byEmail) {
+                    const { data: linkedProfile } = await supabase
+                        .from('profiles')
+                        .upsert({
+                            ...byEmail,
+                            id: user.id,
+                            email: cleanEmail,
+                            role: isSeedAdmin ? 'super_admin' : byEmail.role,
+                            is_active: true
+                        }, { onConflict: 'id' })
+                        .select()
+                        .single()
+                    if (linkedProfile) return linkedProfile
+                }
+            }
+
+            // 3. Provision missing profile record automatically
+            const { data: insertedProfile, error: insertErr } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    employee_id: resolvedEmpId,
+                    full_name: resolvedName,
+                    email: cleanEmail,
+                    role: resolvedRole,
+                    phone: resolvedPhone,
+                    is_active: true
+                }, { onConflict: 'id' })
+                .select()
+                .single()
+
+            if (!insertErr && insertedProfile) {
+                return insertedProfile
+            }
+
+            // Retry with a unique employee_id fallback if employee_id collided
+            const fallbackEmpId = `${resolvedEmpId}-${user.id.slice(0, 4).toUpperCase()}`
+            const { data: retryProfile } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    employee_id: fallbackEmpId,
+                    full_name: resolvedName,
+                    email: cleanEmail,
+                    role: resolvedRole,
+                    phone: resolvedPhone,
+                    is_active: true
+                }, { onConflict: 'id' })
+                .select()
+                .single()
+
+            return retryProfile || null
+        }
+
         async function handleSuccessfulLogin(user) {
             currentUser = user
 
@@ -333,27 +431,7 @@
                 } catch (_) {}
             }
 
-            let { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if ((!profile || error) && user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
-                const { data: upserted, error: upsertErr } = await supabase
-                    .from('profiles')
-                    .upsert({
-                        id: user.id,
-                        employee_id: 'EMP-0001',
-                        full_name: 'Frank Kering (Super Admin)',
-                        email: SUPER_ADMIN_EMAIL,
-                        role: 'super_admin',
-                        is_active: true
-                    })
-                    .select()
-                    .single()
-                if (!upsertErr) profile = upserted
-            }
+            const profile = await resolveOrProvisionProfile(user)
 
             if (!profile) {
                 alert('Logged in, but no profile record was found in public.profiles.')
