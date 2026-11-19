@@ -283,6 +283,7 @@
         let currentProfile = null
         let cachedDispatchTickets = []
         let technicianNameById = {}
+        let dispatchRealtimeSubscribed = false
 
         const loginForm = document.getElementById('login-form')
         const loginBtn = document.getElementById('login-submit-btn')
@@ -493,6 +494,7 @@
                 }
                 loadTechniciansDropdown()
                 loadDispatchQueue()
+                initDispatchRealtime()
             }
             if (role === 'technician') {
                 loadTechnicianJobs(currentUser.id)
@@ -500,6 +502,28 @@
             }
             if (role === 'qc') loadQcData()
             if (role === 'maintenance') loadMaintenanceData()
+        }
+
+        function initDispatchRealtime() {
+            if (dispatchRealtimeSubscribed) return
+            dispatchRealtimeSubscribed = true
+
+            supabase.channel('dispatch-live-sync')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'profiles'
+                }, () => {
+                    loadTechniciansDropdown()
+                })
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tickets'
+                }, () => {
+                    loadDispatchQueue()
+                })
+                .subscribe()
         }
 
         function getLocalDateInputValue(dateObj = new Date()) {
@@ -529,57 +553,104 @@
         // ==========================================
         window.refreshRegisteredTechnicians = async function() {
             await loadTechniciansDropdown()
+            await loadDispatchQueue()
         }
 
         async function loadTechniciansDropdown() {
             const select = document.getElementById('t-tech')
             if (!select) return
 
-            // Point strictly to technicians registered in public.profiles (role = 'technician')
-            const { data: techRows, error: techErr } = await supabase
-                .from('profiles')
-                .select('id, full_name, employee_id, role, is_active')
-                .ilike('role', 'technician')
+            const previousSelection = select.value
+            let rows = null
+            let lastError = null
 
-            if (techErr) {
-                console.error('Error querying registered technicians in public.profiles:', techErr)
-                select.innerHTML = `<option value="">Error loading technicians from database</option>`
+            // Attempt 1: exact role match on public.profiles
+            const exactRes = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('role', 'technician')
+
+            if (!exactRes.error && Array.isArray(exactRes.data)) {
+                rows = exactRes.data
+            } else {
+                lastError = exactRes.error
+            }
+
+            // Attempt 2: case-insensitive technician role match
+            if (!rows) {
+                const ilikeRes = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .ilike('role', '%technician%')
+
+                if (!ilikeRes.error && Array.isArray(ilikeRes.data)) {
+                    rows = ilikeRes.data
+                    lastError = null
+                } else {
+                    lastError = ilikeRes.error || lastError
+                }
+            }
+
+            // Attempt 3: read profiles table and filter technician role client-side
+            if (!rows) {
+                const allRes = await supabase
+                    .from('profiles')
+                    .select('*')
+
+                if (!allRes.error && Array.isArray(allRes.data)) {
+                    rows = allRes.data.filter(r =>
+                        String(r.role || '').trim().toLowerCase().includes('technician')
+                    )
+                    lastError = null
+                } else {
+                    lastError = allRes.error || lastError
+                }
+            }
+
+            if (!rows) {
+                console.error('Technician query failed:', lastError)
+                const msg = lastError?.message || 'Unable to query profiles table'
+                select.innerHTML = `<option value="">DB Error: ${msg}</option>`
                 renderDailyTicketsTable()
                 return
             }
 
             const uniqueMap = new Map()
-            ;(Array.isArray(techRows) ? techRows : []).forEach(row => {
+            rows.forEach(row => {
                 if (!row || !row.id) return
                 if (row.is_active === false) return
-                if (String(row.role || '').trim().toLowerCase() !== 'technician') return
+                if (!String(row.role || '').trim().toLowerCase().includes('technician')) return
                 uniqueMap.set(row.id, row)
             })
 
             const technicians = Array.from(uniqueMap.values()).sort((a, b) =>
-                String(a.full_name || '').localeCompare(String(b.full_name || ''))
+                String(a.full_name || a.email || '').localeCompare(String(b.full_name || b.email || ''))
             )
 
             technicianNameById = {}
             technicians.forEach(t => {
-                const label = `${t.full_name || 'Technician'}${t.employee_id ? ` (${t.employee_id})` : ''}`
+                const displayName = t.full_name || t.email || 'Technician'
+                const label = `${displayName}${t.employee_id ? ` (${t.employee_id})` : ''}`
                 technicianNameById[t.id] = label
             })
 
             if (technicians.length === 0) {
-                select.innerHTML = `<option value="">No registered technicians found</option>`
+                select.innerHTML = `<option value="">No technicians found in database</option>`
                 renderDailyTicketsTable()
                 return
             }
 
             select.innerHTML =
-                `<option value="">-- Select Registered Technician --</option>` +
+                `<option value="">-- Select Registered Technician (${technicians.length}) --</option>` +
                 technicians.map(t => {
-                    const label = `${t.full_name || 'Technician'}${t.employee_id ? ` (${t.employee_id})` : ''}`
+                    const displayName = t.full_name || t.email || 'Technician'
+                    const label = `${displayName}${t.employee_id ? ` (${t.employee_id})` : ''}`
                     return `<option value="${t.id}">${label}</option>`
                 }).join('')
 
-            if (technicians.length === 1) {
+            if (previousSelection && technicianNameById[previousSelection]) {
+                select.value = previousSelection
+            } else if (technicians.length === 1) {
                 select.value = technicians[0].id
             }
 
