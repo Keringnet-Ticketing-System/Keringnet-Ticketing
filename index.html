@@ -273,7 +273,7 @@
 
             let { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-            // Automatic fallback sign-up for Super Admin if not yet registered in Auth
+            // If Super Admin seed credentials aren't in Auth yet, sign up via Supabase Auth cleanly
             if (error && email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASS) {
                 const signUpRes = await supabase.auth.signUp({
                     email: SUPER_ADMIN_EMAIL,
@@ -286,7 +286,10 @@
                         }
                     }
                 })
-                if (!signUpRes.error) {
+                if (signUpRes.data?.session) {
+                    data = signUpRes.data
+                    error = null
+                } else if (!signUpRes.error) {
                     const retryLogin = await supabase.auth.signInWithPassword({ email, password })
                     data = retryLogin.data
                     error = retryLogin.error
@@ -303,13 +306,17 @@
 
         async function handleSuccessfulLogin(user) {
             currentUser = user
+
+            if (user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+                await supabase.rpc('promote_seed_super_admin').catch(() => {})
+            }
+
             let { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
                 .single()
 
-            // Ensure Super Admin profile exists if logging in as frank_kering@gmail.com
             if ((!profile || error) && user.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
                 const { data: upserted } = await supabase
                     .from('profiles')
@@ -351,7 +358,6 @@
         }
 
         function renderDashboard(role) {
-            // Hide ALL panels first so user only sees their assigned role portal
             document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.add('hidden'))
             const panel = document.getElementById(`panel-${role}`)
             if (panel) panel.classList.remove('hidden')
