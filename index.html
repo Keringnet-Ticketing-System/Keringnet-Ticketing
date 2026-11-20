@@ -653,24 +653,59 @@
                 return
             }
 
+            const ticket_no = 'TKT-' + Math.floor(1000 + Math.random() * 9000)
+
             const { data: client, error: cError } = await supabase.from('clients').insert([{
                 account_no, full_name, phone, plot_name, house_no, package_type
             }]).select().single()
 
-            if (cError) { alert('Error creating client: ' + cError.message); return; }
+            if (!cError && client) {
+                const { error: tError } = await supabase.from('tickets').insert([{
+                    ticket_no,
+                    client_id: client.id,
+                    ticket_type,
+                    issue_description,
+                    status: 'Assigned',
+                    assigned_technician_id,
+                    dispatcher_id: currentUser.id
+                }])
 
-            const ticket_no = 'TKT-' + Math.floor(1000 + Math.random() * 9000)
-            const { error: tError } = await supabase.from('tickets').insert([{
-                ticket_no,
-                client_id: client.id,
-                ticket_type,
-                issue_description,
-                status: 'Assigned',
-                assigned_technician_id,
-                dispatcher_id: currentUser.id
-            }])
+                if (!tError) {
+                    alert('Ticket created and dispatched successfully!')
+                    e.target.reset()
+                    await loadTechniciansDropdown()
+                    loadDispatchQueue()
+                    return
+                }
 
-            if (tError) { alert('Error creating ticket: ' + tError.message); return; }
+                if (!String(tError.message || '').toLowerCase().includes('permission denied')) {
+                    alert('Error creating ticket: ' + tError.message)
+                    return
+                }
+            } else if (cError && !String(cError.message || '').toLowerCase().includes('permission denied')) {
+                alert('Error creating client: ' + cError.message)
+                return
+            }
+
+            // Fallback to SECURITY DEFINER RPC if table/RLS permissions restrict direct writes
+            const { error: rpcErr } = await supabase.rpc('dispatch_create_client_and_ticket', {
+                p_account_no: account_no,
+                p_full_name: full_name,
+                p_phone: phone,
+                p_plot_name: plot_name,
+                p_house_no: house_no,
+                p_package_type: package_type,
+                p_ticket_no: ticket_no,
+                p_ticket_type: ticket_type,
+                p_issue_description: issue_description,
+                p_assigned_technician_id: assigned_technician_id,
+                p_dispatcher_id: currentUser.id
+            })
+
+            if (rpcErr) {
+                alert('Error dispatching ticket: ' + rpcErr.message)
+                return
+            }
 
             alert('Ticket created and dispatched successfully!')
             e.target.reset()
