@@ -564,46 +564,25 @@
             let rows = null
             let lastError = null
 
-            // Attempt 1: exact role match on public.profiles
-            const exactRes = await supabase
+            // Attempt 1: direct query on public.profiles
+            const directRes = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('role', 'technician')
 
-            if (!exactRes.error && Array.isArray(exactRes.data)) {
-                rows = exactRes.data
+            if (!directRes.error && Array.isArray(directRes.data)) {
+                rows = directRes.data
             } else {
-                lastError = exactRes.error
+                lastError = directRes.error
             }
 
-            // Attempt 2: case-insensitive technician role match
+            // Attempt 2: SECURITY DEFINER RPC fallback if table permission/RLS blocks direct select
             if (!rows) {
-                const ilikeRes = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .ilike('role', '%technician%')
-
-                if (!ilikeRes.error && Array.isArray(ilikeRes.data)) {
-                    rows = ilikeRes.data
+                const rpcRes = await supabase.rpc('get_registered_technicians')
+                if (!rpcRes.error && Array.isArray(rpcRes.data)) {
+                    rows = rpcRes.data
                     lastError = null
                 } else {
-                    lastError = ilikeRes.error || lastError
-                }
-            }
-
-            // Attempt 3: read profiles table and filter technician role client-side
-            if (!rows) {
-                const allRes = await supabase
-                    .from('profiles')
-                    .select('*')
-
-                if (!allRes.error && Array.isArray(allRes.data)) {
-                    rows = allRes.data.filter(r =>
-                        String(r.role || '').trim().toLowerCase().includes('technician')
-                    )
-                    lastError = null
-                } else {
-                    lastError = allRes.error || lastError
+                    lastError = rpcRes.error || lastError
                 }
             }
 
